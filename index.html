@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagen API Demo</title>
+    <link rel="stylesheet" href="index.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.sh/@google/genai@1.0.0"
+        }
+      }
+    </script>
+</head>
+<body>
+    <main>
+        <h1>Model Mockup Generator for DarkWildWest</h1>
+        <div id="controls" role="form" aria-labelledby="form-title">
+            <h2 id="form-title" class="sr-only">Image Generation for DarkWildWest</h2>
+            
+            <label for="prompt-input">Additional Prompt Details</label>
+            <textarea id="prompt-input" rows="2" aria-label="Additional image generation details" placeholder="e.g., western style, urban setting, dramatic lighting"></textarea>
+
+            <label for="negative-prompt-input">Negative Prompt (optional)</label>
+            <textarea id="negative-prompt-input" rows="2" aria-label="Optional negative prompt to exclude elements"></textarea>
+
+            <h3>Character Details</h3>
+            <div class="control-row">
+                 <div>
+                    <label for="gender-select">Gender</label>
+                    <select id="gender-select" aria-label="Gender preference">
+                        <option value="any" selected>Any</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="tattoos-select">Tattoos</label>
+                    <select id="tattoos-select" aria-label="Tattoo preference">
+                        <option value="any" selected>Any</option>
+                        <option value="yes">With Tattoos</option>
+                        <option value="no">No Tattoos</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="glasses-select">Glasses</label>
+                    <select id="glasses-select" aria-label="Glasses preference">
+                        <option value="any" selected>Any</option>
+                        <option value="yes">With Glasses</option>
+                        <option value="no">No Glasses</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="hat-select">Cowboy Hat</label>
+                    <select id="hat-select" aria-label="Cowboy hat preference">
+                        <option value="any" selected>Any</option>
+                        <option value="yes">With Cowboy Hat</option>
+                        <option value="no">No Cowboy Hat</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>Garment Details</h3>
+             <div class="control-row">
+                <div>
+                    <label for="garment-type-select">Garment Type</label>
+                    <select id="garment-type-select" aria-label="Garment type">
+                        <option value="T-Shirt" selected>T-Shirt</option>
+                        <option value="Hoodie">Hoodie</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="garment-style-select">Garment Style</label>
+                    <select id="garment-style-select" aria-label="Garment style">
+                        <option>Comfort Colors 1717</option>
+                        <option>Bella+Canvas 3001</option>
+                        <option>Gildan 5000</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="logo-input">Logo Upload (optional)</label>
+                    <input type="file" id="logo-input" accept="image/png, image/jpeg, image/webp">
+                </div>
+            </div>
+
+            <h3>Shot & Angle</h3>
+            <div class="control-row">
+                <div>
+                    <label for="shot-type-select">Shot Type</label>
+                    <select id="shot-type-select" aria-label="Shot type">
+                        <option value="any" selected>Any</option>
+                        <option value="close-up">Close-up</option>
+                        <option value="full-body">Full Body Shot</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="face-visibility-select">Face Visibility</label>
+                    <select id="face-visibility-select" aria-label="Face visibility">
+                        <option value="any" selected>Any</option>
+                        <option value="visible">Face Visible</option>
+                        <option value="hidden">Face Not Visible</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="angle-select">Shooting Angle</label>
+                    <select id="angle-select" aria-label="Shooting angle">
+                        <option value="any" selected>Any</option>
+                        <option value="front">From the Front</option>
+                        <option value="back">From the Back</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>Scene & Image Settings</h3>
+            <div class="control-row">
+                <div>
+                    <label for="background-select">Background</label>
+                    <select id="background-select" aria-label="Background setting">
+                        <option value="prompt" selected>As per prompt</option>
+                        <option value="horse stable">Horse Stable</option>
+                        <option value="old warehouse">Old Warehouse</option>
+                        <option value="wooden wall">Wooden Wall</option>
+                        <option value="field">Field</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="aspect-ratio-select">Aspect Ratio</label>
+                    <select id="aspect-ratio-select" aria-label="Image aspect ratio">
+                        <option value="1:1" selected>Square (1:1)</option>
+                        <option value="16:9">Landscape (16:9)</option>
+                        <option value="9:16">Portrait (9:16)</option>
+                        <option value="4:3">Standard (4:3)</option>
+                        <option value="3:4">Tall (3:4)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-row">
+                <div>
+                    <label for="image-count-input">Number of images (1-4)</label>
+                    <input type="number" id="image-count-input" min="1" max="4" value="3" aria-label="Number of images to generate">
+                </div>
+                <div>
+                    <label for="person-generation-select">Person generation policy</label>
+                    <select id="person-generation-select" aria-label="Person generation policy">
+                        <option value="ALLOW_ADULT" selected>Allow Adults</option>
+                        <option value="ALLOW_ALL">Allow All</option>
+                        <option value="ALLOW_CHILD">Allow Children</option>
+                        <option value="DENY_ALL">Deny All</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="generate-button">Generate Images</button>
+        </div>
+
+        <div id="loading" class="hidden" aria-live="polite">
+            <div class="spinner"></div>
+            <p id="loading-message">Generating images, this may take a moment...</p>
+        </div>
+        <div id="image-gallery" aria-live="polite"></div>
+    </main>
+    <script type="module" src="index.tsx"></script>
+</body>
+</html>
