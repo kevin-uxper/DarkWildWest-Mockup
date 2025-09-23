@@ -1,309 +1,557 @@
-/**
- * @license
- * Copyright 2025 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import {GoogleGenAI, GeneratedImage, PersonGeneration, Modality} from '@google/genai';
-
-// API key is sourced from environment variables
-const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
-
-// --- DOM ELEMENTS ---
-const promptInput = document.getElementById('prompt-input') as HTMLTextAreaElement;
-const negativePromptInput = document.getElementById('negative-prompt-input') as HTMLTextAreaElement;
-const imageCountInput = document.getElementById('image-count-input') as HTMLInputElement;
-const personGenerationSelect = document.getElementById('person-generation-select') as HTMLSelectElement;
-const generateButton = document.getElementById('generate-button') as HTMLButtonElement;
-const imageGallery = document.getElementById('image-gallery') as HTMLDivElement;
-const loadingIndicator = document.getElementById('loading') as HTMLDivElement;
-const loadingMessage = document.getElementById('loading-message') as HTMLParagraphElement;
-const genderSelect = document.getElementById('gender-select') as HTMLSelectElement;
-const tattoosSelect = document.getElementById('tattoos-select') as HTMLSelectElement;
-const glassesSelect = document.getElementById('glasses-select') as HTMLSelectElement;
-const hatSelect = document.getElementById('hat-select') as HTMLSelectElement;
-const backgroundSelect = document.getElementById('background-select') as HTMLSelectElement;
-const aspectRatioSelect = document.getElementById('aspect-ratio-select') as HTMLSelectElement;
-const shotTypeSelect = document.getElementById('shot-type-select') as HTMLSelectElement;
-const faceVisibilitySelect = document.getElementById('face-visibility-select') as HTMLSelectElement;
-const logoInput = document.getElementById('logo-input') as HTMLInputElement;
-const garmentTypeSelect = document.getElementById('garment-type-select') as HTMLSelectElement;
-const garmentStyleSelect = document.getElementById('garment-style-select') as HTMLSelectElement;
-const angleSelect = document.getElementById('angle-select') as HTMLSelectElement;
+import { GoogleGenAI, Modality } from '@google/genai';
+import { Modal, Collapse } from 'bootstrap';
 
 
-// --- MODEL SELECTION ---
-const generationModel = 'imagen-4.0-generate-001';
-const editingModel = 'gemini-2.5-flash-image-preview';
-
-// --- GARMENT DATA ---
-const garmentStyles: Record<string, string[]> = {
-    'T-Shirt': ['Comfort Colors 1717', 'Bella+Canvas 3001', 'Gildan 5000'],
-    'Hoodie': ['Gildan 18500', 'Lane Seven LS14001'],
+// --- TRANSLATIONS ---
+const translations = {
+  en: {
+    title: 'AI Mockup Generator',
+    subtitle: 'Create free Mockups online for t-shirts, hoodies, stickers etc.',
+    generateButton: 'Generate Images',
+    joinButton: 'Join the discussion group',
+    loadingMessage: 'Generating images, please wait...',
+    alertError: 'An error occurred. Please try again.',
+    alertErrorQuota: 'Quota exceeded. Please check your plan and billing details. This is not an application error.',
+    alertErrorApiKey: 'Invalid API Key. Please ensure the API Key is configured correctly in the environment. This is not an application error.',
+    mockupTypeTitle: 'Mockup Type',
+    mockupTypeWithModel: 'With Model',
+    mockupTypeGarmentOnly: 'Garment Only',
+    characterDetailsTitle: 'Character Details',
+    genderLabel: 'Gender',
+    genderFemale: 'Female',
+    genderMale: 'Male',
+    ethnicityLabel: 'Ethnicity',
+    ethnicityAny: 'Any',
+    ethnicityCaucasian: 'Caucasian',
+    ethnicityAsian: 'Asian',
+    ethnicityAfricanAmerican: 'African American',
+    ethnicityHispanic: 'Hispanic',
+    hatLabel: 'Hat',
+    hatAny: 'Any',
+    hatNone: 'No hat',
+    hatCowboy: 'Cowboy hat',
+    hatBeanie: 'Beanie',
+    hatBaseballCap: 'Baseball cap',
+    glassesLabel: 'Glasses',
+    glassesNone: 'No glasses',
+    glassesClear: 'Clear glasses',
+    glassesSun: 'Sunglasses',
+    glassesColored: 'Colored glasses',
+    garmentDetailsTitle: 'Garment Details',
+    garmentStyleLabel: 'Garment Style',
+    garmentColorLabel: 'Garment Color',
+    colorBlack: 'Black',
+    colorWhite: 'White',
+    colorBay: 'Bay',
+    colorBlossom: 'Blossom',
+    colorChambray: 'Chambray',
+    colorDenim: 'Denim',
+    colorGraphite: 'Graphite',
+    colorGrey: 'Grey',
+    colorIvory: 'Ivory',
+    colorKhaki: 'Khaki',
+    garmentBrandLabel: 'Garment Brand',
+    brandAny: 'Any',
+    artworkDetailsTitle: 'Upload Artwork',
+    logoLabel: 'Upload artwork',
+    artworkTooltip: 'The design will be mocked up onto the model\'s shirt in the generated photo.',
+    shotFramingTitle: 'Shot & Framing',
+    shotTypeLabel: 'Shot Type',
+    shotTypeFullBody: 'Full Body',
+    shotTypeUpperBody: 'Upper Body',
+    shotTypeCloseUp: 'Close-up',
+    shotTypeMedium: 'Medium Shot (waist up)',
+    shotTypeCowboy: 'Cowboy Shot (mid-thigh up)',
+    shotTypeDutch: 'Dutch Angle',
+    shotTypeLow: 'Low Angle',
+    shotTypeHigh: 'High Angle',
+    poseLabel: 'Pose',
+    poseAny: 'Any',
+    poseStandingStraight: 'Standing straight, looking forward',
+    poseStandingSideways: 'Standing sideways',
+    poseWalking: 'Walking towards camera',
+    poseLeaning: 'Leaning against a wall',
+    poseSitting: 'Sitting on a stool',
+    poseHandsPockets: 'Hands in pockets',
+    poseArmsCrossed: 'Arms crossed',
+    backgroundTitle: 'Background',
+    backgroundLabel: 'Describe the background',
+    backgroundPlaceholder: 'e.g., outdoor urban setting, plain white background, beach at sunset...',
+    imageSettingsTitle: 'Image Settings',
+    aspectRatioLabel: 'Aspect Ratio',
+    aspectRatioSquare: 'Square (1:1) - approx. 1536x1536px',
+    aspectRatioPortrait: 'Portrait (3:4) - approx. 1152x1536px',
+    aspectRatioLandscape: 'Landscape (4:3) - approx. 1536x1152px',
+    aspectRatioWidescreen: 'Widescreen (16:9)',
+    aspectRatioPortraitWide: 'Portrait Wide (9:16)',
+    numImagesLabel: 'Number of images (1-4)',
+    negativePromptLabel: 'Negative Prompt',
+    negativePromptTooltip: 'Describe what you DON\'T want to see in the image.',
+    policyTitle: 'Policy',
+    personPolicyLabel: 'Person Generation Policy',
+    personPolicyTooltip: 'I will not attempt to generate imagery of a real person, including myself.',
+    finalPromptLabel: 'Final Prompt Sent to AI',
+    footerText: 'Copyright 2025 by CreatorStack',
+    languageAriaLabel: 'Language selection',
+    downloadButton: 'Download',
+    zoomImage: 'Zoom Image',
+  },
+  vi: {
+    title: 'Trình tạo Mockup AI',
+    subtitle: 'Tạo Mockup miễn phí cho áo thun, áo hoodie, nhãn dán, v.v.',
+    generateButton: 'Tạo ảnh',
+    joinButton: 'Tham gia nhóm thảo luận',
+    loadingMessage: 'Đang tạo ảnh, vui lòng chờ...',
+    alertError: 'Đã xảy ra lỗi. Vui lòng thử lại.',
+    alertErrorQuota: 'Đã vượt quá hạn ngạch. Vui lòng kiểm tra gói và chi tiết thanh toán của bạn. Đây không phải là lỗi của ứng dụng.',
+    alertErrorApiKey: 'Khóa API không hợp lệ. Vui lòng đảm bảo khóa API được cấu hình chính xác trong môi trường. Đây không phải là lỗi ứng dụng.',
+    mockupTypeTitle: 'Loại Mockup',
+    mockupTypeWithModel: 'Có người mẫu',
+    mockupTypeGarmentOnly: 'Chỉ áo',
+    characterDetailsTitle: 'Chi tiết nhân vật',
+    genderLabel: 'Giới tính',
+    genderFemale: 'Nữ',
+    genderMale: 'Nam',
+    ethnicityLabel: 'Sắc tộc',
+    ethnicityAny: 'Bất kỳ',
+    ethnicityCaucasian: 'Da trắng',
+    ethnicityAsian: 'Châu Á',
+    ethnicityAfricanAmerican: 'Người Mỹ gốc Phi',
+    ethnicityHispanic: 'Người gốc Tây Ban Nha',
+    hatLabel: 'Mũ',
+    hatAny: 'Bất kỳ',
+    hatNone: 'Không đội mũ',
+    hatCowboy: 'Mũ cao bồi',
+    hatBeanie: 'Mũ len',
+    hatBaseballCap: 'Mũ lưỡi trai',
+    glassesLabel: 'Kính',
+    glassesNone: 'Không đeo kính',
+    glassesClear: 'Kính trong',
+    glassesSun: 'Kính râm',
+    glassesColored: 'Kính màu',
+    garmentDetailsTitle: 'Chi tiết trang phục',
+    garmentStyleLabel: 'Kiểu trang phục',
+    garmentColorLabel: 'Màu sắc trang phục',
+    colorBlack: 'Đen',
+    colorWhite: 'Trắng',
+    colorBay: 'Xanh Vịnh',
+    colorBlossom: 'Hồng Phấn',
+    colorChambray: 'Xanh Chambray',
+    colorDenim: 'Jean',
+    colorGraphite: 'Than Chì',
+    colorGrey: 'Xám',
+    colorIvory: 'Trắng Ngà',
+    colorKhaki: 'Kaki',
+    garmentBrandLabel: 'Thương hiệu trang phục',
+    brandAny: 'Bất kỳ',
+    artworkDetailsTitle: 'Tải lên Artwork',
+    logoLabel: 'Tải lên artwork',
+    artworkTooltip: 'Thiết kế sẽ được mockup vào áo của người mẫu trong ảnh được tạo ra.',
+    shotFramingTitle: 'Góc chụp & Khung hình',
+    shotTypeLabel: 'Loại ảnh chụp',
+    shotTypeFullBody: 'Toàn thân',
+    shotTypeUpperBody: 'Nửa thân trên',
+    shotTypeCloseUp: 'Cận cảnh',
+    shotTypeMedium: 'Ảnh trung bình (từ eo trở lên)',
+    shotTypeCowboy: 'Ảnh Cowboy (từ giữa đùi trở lên)',
+    shotTypeDutch: 'Góc nghiêng (Dutch Angle)',
+    shotTypeLow: 'Góc thấp',
+    shotTypeHigh: 'Góc cao',
+    poseLabel: 'Tư thế',
+    poseAny: 'Bất kỳ',
+    poseStandingStraight: 'Đứng thẳng, nhìn về phía trước',
+    poseStandingSideways: 'Đứng nghiêng',
+    poseWalking: 'Đi về phía máy ảnh',
+    poseLeaning: 'Dựa vào tường',
+    poseSitting: 'Ngồi trên ghế đẩu',
+    poseHandsPockets: 'Tay trong túi quần',
+    poseArmsCrossed: 'Khoanh tay',
+    backgroundTitle: 'Nền',
+    backgroundLabel: 'Mô tả nền',
+    backgroundPlaceholder: 'ví dụ: cảnh đô thị ngoài trời, nền trắng trơn, bãi biển lúc hoàng hôn...',
+    imageSettingsTitle: 'Cài đặt hình ảnh',
+    aspectRatioLabel: 'Tỷ lệ khung hình',
+    aspectRatioSquare: 'Vuông (1:1) - khoảng 1536x1536px',
+    aspectRatioPortrait: 'Dọc (3:4) - khoảng 1152x1536px',
+    aspectRatioLandscape: 'Ngang (4:3) - khoảng 1536x1152px',
+    aspectRatioWidescreen: 'Màn ảnh rộng (16:9)',
+    aspectRatioPortraitWide: 'Chân dung rộng (9:16)',
+    numImagesLabel: 'Số lượng ảnh (1-4)',
+    negativePromptLabel: 'Prompt phủ định',
+    negativePromptTooltip: 'Mô tả những gì bạn KHÔNG muốn thấy trong ảnh.',
+    policyTitle: 'Chính sách',
+    personPolicyLabel: 'Chính sách tạo hình ảnh người',
+    personPolicyTooltip: 'Tôi sẽ không cố gắng tạo ra hình ảnh của một người thật, bao gồm cả chính tôi.',
+    finalPromptLabel: 'Prompt cuối cùng được gửi đến AI',
+    footerText: 'Bản quyền 2025 bởi CreatorStack',
+    languageAriaLabel: 'Chọn ngôn ngữ',
+    downloadButton: 'Tải xuống',
+    zoomImage: 'Phóng to ảnh',
+  },
 };
 
-// --- INITIAL PROMPT ---
-promptInput.value = 'western style';
+let currentLang = 'en';
 
-// --- EVENT LISTENERS ---
-generateButton.addEventListener('click', generateFinalImages);
-garmentTypeSelect.addEventListener('change', updateGarmentStyles);
+// --- DOM ELEMENTS ---
+let languageSelector: HTMLSelectElement;
+let mockupTypeModelRadio: HTMLInputElement;
+let mockupTypeGarmentRadio: HTMLInputElement;
+let characterDetailsButton: HTMLButtonElement;
+let characterDetailsCollapse: Collapse;
+let shotFramingButton: HTMLButtonElement;
+let shotFramingCollapse: Collapse;
+let genderSelect: HTMLSelectElement;
+let ethnicitySelect: HTMLSelectElement;
+let hatSelect: HTMLSelectElement;
+let glassesSelect: HTMLSelectElement;
+let garmentStyleSelect: HTMLSelectElement;
+let garmentColorSelect: HTMLSelectElement;
+let garmentBrandSelect: HTMLSelectElement;
+let shotTypeSelect: HTMLSelectElement;
+let poseSelect: HTMLSelectElement;
+let aspectRatioSelect: HTMLSelectElement;
+let numImagesInput: HTMLInputElement;
+let negativePromptInput: HTMLInputElement;
+let backgroundPromptInput: HTMLTextAreaElement;
+let logoUpload: HTMLInputElement;
+let logoPreviewContainer: HTMLElement;
+let logoPreviewImg: HTMLImageElement;
+let removeLogoButton: HTMLButtonElement;
+let generateButton: HTMLButtonElement;
+let regenerateButton: HTMLButtonElement;
+let editPromptButton: HTMLButtonElement;
+let gallery: HTMLElement;
+let loadingIndicator: HTMLElement;
+let finalPromptContainer: HTMLElement;
+let finalPromptText: HTMLTextAreaElement;
+let imageModal: Modal;
 
-function updateGarmentStyles() {
-    const selectedType = garmentTypeSelect.value;
-    const styles = garmentStyles[selectedType] || [];
-    
-    // Clear current options
-    garmentStyleSelect.innerHTML = '';
 
-    // Populate new options
-    styles.forEach(style => {
-        const option = document.createElement('option');
-        option.value = style;
-        option.textContent = style;
-        garmentStyleSelect.appendChild(option);
-    });
+let logoFile: File | null = null;
+
+// --- FUNCTIONS ---
+
+function setLanguage(lang: string) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.querySelectorAll('[data-translate-key]').forEach(elem => {
+    const key = elem.getAttribute('data-translate-key') as keyof typeof translations.en;
+    if (key && translations[lang as keyof typeof translations]?.[key]) {
+      elem.innerHTML = translations[lang as keyof typeof translations][key]!;
+    }
+  });
+  document.querySelectorAll('[data-translate-placeholder-key]').forEach(elem => {
+    const key = elem.getAttribute('data-translate-placeholder-key') as keyof typeof translations.en;
+    if (key && translations[lang as keyof typeof translations]?.[key]) {
+        (elem as HTMLInputElement | HTMLTextAreaElement).placeholder = translations[lang as keyof typeof translations][key]!;
+    }
+  });
+   document.querySelectorAll('[data-translate-aria-label-key]').forEach(elem => {
+    const key = elem.getAttribute('data-translate-aria-label-key') as keyof typeof translations.en;
+    if (key && translations[lang as keyof typeof translations]?.[key]) {
+      elem.setAttribute('aria-label', translations[lang as keyof typeof translations][key]!);
+    }
+  });
 }
 
-
-async function generateFinalImages() {
-  const basePrompt = buildMainPrompt();
-  if (!basePrompt) {
-    alert('Please enter a prompt.');
-    return;
+function arrayBufferToBase64(buffer: ArrayBuffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
   }
+  return window.btoa(binary);
+}
 
-  setLoading(true, 'Preparing for generation...');
-
-  // 1. Read logo file if it exists
-  const logoFile = logoInput.files?.[0];
-  let logoData: {data: string; mimeType: string} | null = null;
-  if (logoFile) {
-    try {
-      logoData = await readFileAsBase64(logoFile);
-    } catch (error) {
-      console.error("Error reading logo file:", error);
-      displayError('Error: Could not read the selected logo file.');
-      setLoading(false);
-      return;
-    }
+function setLoading(isLoading: boolean) {
+  if (isLoading) {
+    loadingIndicator.classList.remove('d-none');
+    gallery.innerHTML = ''; // Clear previous images
+    gallery.appendChild(loadingIndicator);
+    generateButton.disabled = true;
+    regenerateButton.disabled = true;
+  } else {
+    loadingIndicator.classList.add('d-none');
+    generateButton.disabled = false;
+    regenerateButton.disabled = false;
   }
-
-  try {
-    // 2. Generate the base images
-    updateLoadingMessage('Step 1/2: Generating base mockup images...');
-    const baseImages = await generateBaseImages(basePrompt, !logoData);
-
-    if (!baseImages || baseImages.length === 0) {
-        displayError('No base images were generated. The prompt may have been filtered.');
-        setLoading(false);
-        return;
-    }
-
-    // 3. If a logo was provided, apply it to each image
-    if (logoData) {
-      updateLoadingMessage('Step 2/2: Applying logo to images...');
-      const garmentType = garmentTypeSelect.value;
-      const editPromises = baseImages.map(baseImage => 
-        applyLogoToImage(baseImage, logoData!, garmentType)
-      );
-      const finalImages = await Promise.all(editPromises);
-      displayImages(finalImages, basePrompt);
-    } else {
-      displayImages(baseImages, basePrompt); // Display base images directly
-    }
-
-  } catch (error) {
-    console.error("Error during image generation process:", error);
-    displayError('Error: Could not generate images. Check the console for details.');
-  } finally {
-    setLoading(false);
-  }
-}
-
-function buildMainPrompt(): string {
-    const additionalDetails = promptInput.value.trim();
-    const gender = genderSelect.value;
-    const garmentType = garmentTypeSelect.value;
-    const garmentStyle = garmentStyleSelect.value;
-    
-    let corePrompt = `Mockup photo of a ${gender === 'any' ? 'person' : gender + ' model'} wearing a solid black ${garmentStyle} ${garmentType}`;
-
-    if (additionalDetails) {
-        corePrompt += `, ${additionalDetails}`;
-    }
-
-    const promptParts: string[] = [corePrompt];
-
-    const tattoos = tattoosSelect.value;
-    if (tattoos === 'yes') promptParts.push('with tattoos on their arm');
-    if (tattoos === 'no') promptParts.push('with no tattoos');
-
-    const glasses = glassesSelect.value;
-    if (glasses === 'yes') promptParts.push('wearing glasses');
-    if (glasses === 'no') promptParts.push('not wearing glasses');
-    
-    const hat = hatSelect.value;
-    if (hat === 'yes') promptParts.push('wearing a cowboy hat');
-    if (hat === 'no') promptParts.push('not wearing a cowboy hat');
-    
-    const shotType = shotTypeSelect.value;
-    if (shotType === 'close-up') promptParts.push('close-up shot');
-    if (shotType === 'full-body') promptParts.push('full body shot');
-
-    const faceVisibility = faceVisibilitySelect.value;
-    if (faceVisibility === 'visible') promptParts.push('face is clearly visible');
-    if (faceVisibility === 'hidden') promptParts.push('face is not visible');
-    
-    const angle = angleSelect.value;
-    if (angle === 'front') promptParts.push('shot from the front');
-    if (angle === 'back') promptParts.push('shot from the back');
-
-    const background = backgroundSelect.value;
-    if (background !== 'prompt') {
-        promptParts.push(`the background is a ${background}`);
-    }
-    return promptParts.join(', ');
-}
-
-async function generateBaseImages(prompt: string, noLogo: boolean): Promise<GeneratedImage[]> {
-    const finalPrompt = noLogo ? `${prompt}, no logo` : prompt;
-    const negativePrompt = negativePromptInput.value.trim();
-    const numberOfImages = parseInt(imageCountInput.value, 10);
-    const personGeneration = personGenerationSelect.value as PersonGeneration;
-    const aspectRatio = aspectRatioSelect.value;
-
-    const config: any = {
-      numberOfImages: numberOfImages,
-      aspectRatio: aspectRatio,
-      personGeneration: personGeneration,
-      outputMimeType: 'image/jpeg',
-    };
-
-    if (negativePrompt) {
-        config.negativePrompt = negativePrompt;
-    }
-
-    const response = await ai.models.generateImages({
-      model: generationModel,
-      prompt: finalPrompt,
-      config: config,
-    });
-    
-    return response.generatedImages || [];
-}
-
-async function applyLogoToImage(baseImage: GeneratedImage, logoData: {data: string, mimeType: string}, garmentType: string): Promise<GeneratedImage> {
-    if (!baseImage.image?.imageBytes) return baseImage; // Return original if it has no data
-    
-    try {
-        // Call the editing model to place the logo correctly
-        const editResponse = await ai.models.generateContent({
-            model: editingModel,
-            contents: {
-                parts: [
-                    // Part 1: The base mockup image
-                    { inlineData: { data: baseImage.image.imageBytes, mimeType: baseImage.image.mimeType || 'image/jpeg' } },
-                    // Part 2: The logo image
-                    { inlineData: { data: logoData.data, mimeType: logoData.mimeType } },
-                    // Part 3: The instruction
-                    { text: `Take the second image (the logo) and place it on the chest area of the ${garmentType.toLowerCase()} in the first image. It should be centered and sized realistically for a graphic print. Ensure the logo blends with the fabric's texture, folds, and lighting.` },
-                ],
-            },
-            config: {
-                responseModalities: [Modality.IMAGE, Modality.TEXT],
-            },
-        });
-
-        // Extract the edited image from the response
-        const editedImagePart = editResponse.candidates?.[0]?.content?.parts.find(p => p.inlineData);
-        if (editedImagePart?.inlineData) {
-            return {
-                image: {
-                    imageBytes: editedImagePart.inlineData.data,
-                    mimeType: editedImagePart.inlineData.mimeType,
-                }
-            };
-        }
-        return baseImage; // Fallback to base image if edit fails
-    } catch (err) {
-        console.error('Failed to apply logo to an image, returning original.', err);
-        return baseImage; // Fallback to base image on error
-    }
-}
-
-
-function setLoading(isLoading: boolean, message?: string) {
-    if (isLoading) {
-        generateButton.disabled = true;
-        loadingIndicator.classList.remove('hidden');
-        imageGallery.textContent = ''; // Clear previous content
-        updateLoadingMessage(message || 'Processing...');
-    } else {
-        generateButton.disabled = false;
-        loadingIndicator.classList.add('hidden');
-    }
-}
-
-function updateLoadingMessage(message: string) {
-    loadingMessage.textContent = message;
-}
-
-function displayImages(generatedImages: (GeneratedImage | null)[] | undefined, prompt: string) {
-    imageGallery.textContent = ''; // Clear previous content
-    if (generatedImages && generatedImages.length > 0) {
-        generatedImages.forEach((generatedImage: GeneratedImage | null, index: number) => {
-            if (generatedImage?.image?.imageBytes) {
-                const mimeType = generatedImage.image.mimeType || 'image/jpeg';
-                const src = `data:${mimeType};base64,${generatedImage.image.imageBytes}`;
-                
-                const container = document.createElement('div');
-                container.className = 'image-container';
-
-                const img = new Image();
-                img.src = src;
-                img.alt = `${prompt} - Image ${Number(index) + 1}`;
-                
-                const downloadLink = document.createElement('a');
-                downloadLink.href = src;
-                const extension = mimeType.split('/')[1] || 'jpeg';
-                downloadLink.download = `imagen-mockup-${Date.now()}-${index + 1}.${extension}`;
-                downloadLink.className = 'download-button';
-                downloadLink.textContent = 'Download';
-                
-                container.appendChild(img);
-                container.appendChild(downloadLink);
-                imageGallery.appendChild(container);
-            }
-        });
-    } else {
-        displayError('No images were generated or available to display.');
-    }
 }
 
 function displayError(message: string) {
-    imageGallery.textContent = '';
-    const errorParagraph = document.createElement('p');
-    errorParagraph.textContent = message;
-    imageGallery.appendChild(errorParagraph);
+  gallery.innerHTML = ''; // Clear loading indicator
+  const alertDiv = document.createElement('div');
+  alertDiv.className = 'alert alert-danger w-100';
+  alertDiv.role = 'alert';
+  alertDiv.textContent = message;
+  gallery.appendChild(alertDiv);
 }
 
-// --- HELPER FUNCTIONS ---
+function buildMainPrompt(): string {
+  const garmentStyle = garmentStyleSelect.value;
+  const garmentColor = garmentColorSelect.value;
+  const garmentBrand = garmentBrandSelect.value === 'any' ? '' : `(${garmentBrandSelect.value} style)`;
+  const background = backgroundPromptInput.value.trim() || 'plain white background';
+  const negativePrompt = negativePromptInput.value.trim();
 
-function readFileAsBase64(file: File): Promise<{data: string, mimeType: string}> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result as string;
-            const parts = result.split(',');
-            const mimeType = parts[0].match(/:(.*?);/)?.[1] || 'application/octet-stream';
-            const data = parts[1];
-            resolve({data, mimeType});
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+  let prompt = '';
+
+  if (mockupTypeModelRadio.checked) {
+    const gender = genderSelect.value;
+    const ethnicity = ethnicitySelect.value === 'any' ? '' : ethnicitySelect.value;
+    const hat = hatSelect.value === 'any' ? 'wearing a random hat or no hat' : `wearing a ${hatSelect.value}`;
+    const glasses = glassesSelect.value;
+    const shotType = shotTypeSelect.value;
+    const pose = poseSelect.value === 'any' ? '' : `, ${poseSelect.value}`;
+    prompt = `${shotType} photo of a ${ethnicity} ${gender} model wearing a plain ${garmentColor} ${garmentStyle} ${garmentBrand}, ${hat}, ${glasses}${pose}, on a ${background}, hyper-realistic, professional studio lighting`;
+  } else {
+    prompt = `product photo of a plain ${garmentColor} ${garmentStyle} ${garmentBrand}, laid flat on a ${background}, hyper-realistic, professional studio lighting`;
+  }
+
+  if (negativePrompt) {
+    return `${prompt}, --no ${negativePrompt}`;
+  }
+  return prompt;
+}
+
+function showImageModal(imageUrl: string) {
+    const modalImage = document.getElementById('modal-image') as HTMLImageElement;
+    if (modalImage && imageModal) {
+        modalImage.src = imageUrl;
+        imageModal.show();
+    }
+}
+
+
+function displayImages(images: { imageBytes: string }[], finalPrompt: string) {
+  gallery.innerHTML = ''; // Clear loading indicator
+  if (images.length === 0) {
+      displayError(translations[currentLang as keyof typeof translations].alertError);
+      return;
+  }
+  images.forEach(image => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'image-container';
+
+    const img = document.createElement('img');
+    const imageUrl = `data:image/jpeg;base64,${image.imageBytes}`;
+    img.src = imageUrl;
+    img.className = 'card-img-top';
+    img.alt = finalPrompt;
+
+    const downloadButton = document.createElement('a');
+    downloadButton.href = imageUrl;
+    downloadButton.download = `mockup-${Date.now()}.jpg`;
+    downloadButton.className = 'btn btn-success btn-sm download-button';
+    downloadButton.textContent = translations[currentLang as keyof typeof translations].downloadButton;
+    downloadButton.setAttribute('role', 'button');
+
+    const zoomButton = document.createElement('button');
+    zoomButton.className = 'btn btn-light btn-sm zoom-button';
+    zoomButton.innerHTML = `<i class="bi bi-arrows-fullscreen"></i>`;
+    zoomButton.setAttribute('aria-label', translations[currentLang as keyof typeof translations].zoomImage);
+    zoomButton.onclick = () => showImageModal(imageUrl);
+
+
+    imageContainer.appendChild(img);
+    imageContainer.appendChild(downloadButton);
+    imageContainer.appendChild(zoomButton);
+    card.appendChild(imageContainer);
+    gallery.appendChild(card);
+  });
+}
+
+async function generateFinalImages() {
+  setLoading(true);
+  finalPromptContainer.classList.remove('d-none');
+  
+  let finalPrompt = '';
+  // If the textarea has content (meaning it's a regeneration), use it. Otherwise, build a new prompt.
+  if(finalPromptText.value.trim() !== '') {
+    finalPrompt = finalPromptText.value.trim();
+  } else {
+    finalPrompt = buildMainPrompt();
+    finalPromptText.value = finalPrompt;
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateImages({
+      model: 'imagen-4.0-generate-001',
+      prompt: finalPrompt,
+      config: {
+        numberOfImages: parseInt(numImagesInput.value, 10),
+        aspectRatio: aspectRatioSelect.value as "1:1" | "3:4" | "4:3" | "16:9" | "9:16",
+        outputMimeType: 'image/jpeg',
+      },
     });
+
+    let finalImages = response.generatedImages;
+
+    // If a logo is uploaded, apply it to each generated image
+    if (logoFile && finalImages.length > 0) {
+      const editedImages = [];
+      for (const image of finalImages) {
+        const logoBase64 = await arrayBufferToBase64(await logoFile.arrayBuffer());
+
+        const editResponse = await ai.models.generateContent({
+          model: 'gemini-2.5-flash-image-preview',
+          contents: {
+            parts: [
+              { inlineData: { mimeType: 'image/jpeg', data: image.image.imageBytes } },
+              { inlineData: { mimeType: logoFile.type, data: logoBase64 } },
+              { text: 'Place the second image as a high-quality, realistic print on the center of the t-shirt in the first image.' },
+            ],
+          },
+           config: {
+              responseModalities: [Modality.IMAGE, Modality.TEXT],
+          },
+        });
+        
+        const imagePart = editResponse.candidates[0].content.parts.find(part => part.inlineData);
+        if (imagePart && imagePart.inlineData) {
+            editedImages.push({ imageBytes: imagePart.inlineData.data });
+        }
+      }
+       // Replace original images with edited ones if any were successfully edited
+      if (editedImages.length > 0) {
+         finalImages = editedImages.map(img => ({ image: { imageBytes: img.imageBytes, mimeType: 'image/jpeg' } }));
+      }
+    }
+
+    // FIX: The type of `imageBytes` on `img.image` is optional, but `displayImages` expects a required string.
+    // We map to a new object to satisfy the type, and use a non-null assertion `!` because we expect `generateImages` to return image data on success.
+    displayImages(finalImages.map(img => ({ imageBytes: img.image.imageBytes! })), finalPrompt);
+  } catch (error: any) {
+    console.error('Error generating images:', error);
+    const errorMessage = error.toString();
+    if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('exceeded your current quota')) {
+        displayError(translations[currentLang as keyof typeof translations].alertErrorQuota);
+    } else if (errorMessage.includes('API key not valid')) {
+        displayError(translations[currentLang as keyof typeof translations].alertErrorApiKey);
+    } else {
+        displayError(translations[currentLang as keyof typeof translations].alertError);
+    }
+  } finally {
+    setLoading(false);
+    finalPromptText.readOnly = true;
+    regenerateButton.classList.add('d-none');
+  }
 }
 
-// Initial population of garment styles
-updateGarmentStyles();
+function updateControlsBasedOnMockupType() {
+    const isGarmentOnly = mockupTypeGarmentRadio.checked;
+
+    // Disable/Enable Character Details
+    characterDetailsButton.disabled = isGarmentOnly;
+    if (isGarmentOnly) {
+        characterDetailsCollapse.hide();
+        characterDetailsButton.parentElement?.parentElement?.classList.add('opacity-50');
+    } else {
+        characterDetailsButton.parentElement?.parentElement?.classList.remove('opacity-50');
+    }
+
+    // Disable/Enable Shot & Framing
+    shotFramingButton.disabled = isGarmentOnly;
+    if (isGarmentOnly) {
+        shotFramingCollapse.hide();
+        shotFramingButton.parentElement?.parentElement?.classList.add('opacity-50');
+    } else {
+        shotFramingButton.parentElement?.parentElement?.classList.remove('opacity-50');
+    }
+}
+
+// --- EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Assign DOM elements
+    languageSelector = document.getElementById('language-selector') as HTMLSelectElement;
+    mockupTypeModelRadio = document.getElementById('mockup-type-model') as HTMLInputElement;
+    mockupTypeGarmentRadio = document.getElementById('mockup-type-garment') as HTMLInputElement;
+    characterDetailsButton = document.getElementById('character-details-button') as HTMLButtonElement;
+    shotFramingButton = document.getElementById('shot-framing-button') as HTMLButtonElement;
+    genderSelect = document.getElementById('gender-select') as HTMLSelectElement;
+    ethnicitySelect = document.getElementById('ethnicity-select') as HTMLSelectElement;
+    hatSelect = document.getElementById('hat-select') as HTMLSelectElement;
+    glassesSelect = document.getElementById('glasses-select') as HTMLSelectElement;
+    garmentStyleSelect = document.getElementById('garment-style-select') as HTMLSelectElement;
+    garmentColorSelect = document.getElementById('garment-color-select') as HTMLSelectElement;
+    garmentBrandSelect = document.getElementById('garment-brand-select') as HTMLSelectElement;
+    shotTypeSelect = document.getElementById('shot-type-select') as HTMLSelectElement;
+    poseSelect = document.getElementById('pose-select') as HTMLSelectElement;
+    aspectRatioSelect = document.getElementById('aspect-ratio-select') as HTMLSelectElement;
+    numImagesInput = document.getElementById('num-images-input') as HTMLInputElement;
+    negativePromptInput = document.getElementById('negative-prompt-input') as HTMLInputElement;
+    backgroundPromptInput = document.getElementById('background-prompt-input') as HTMLTextAreaElement;
+    logoUpload = document.getElementById('logo-upload') as HTMLInputElement;
+    logoPreviewContainer = document.getElementById('logo-preview-container') as HTMLElement;
+    logoPreviewImg = document.getElementById('logo-preview-img') as HTMLImageElement;
+    removeLogoButton = document.getElementById('remove-logo-button') as HTMLButtonElement;
+    generateButton = document.getElementById('generate-button') as HTMLButtonElement;
+    regenerateButton = document.getElementById('regenerate-button') as HTMLButtonElement;
+    editPromptButton = document.getElementById('edit-prompt-button') as HTMLButtonElement;
+    gallery = document.getElementById('gallery') as HTMLElement;
+    loadingIndicator = document.getElementById('loading-indicator') as HTMLElement;
+    finalPromptContainer = document.getElementById('final-prompt-container') as HTMLElement;
+    finalPromptText = document.getElementById('final-prompt-text') as HTMLTextAreaElement;
+    
+    const imageModalEl = document.getElementById('image-modal');
+    if (imageModalEl) {
+        imageModal = new Modal(imageModalEl);
+    }
+    const characterDetailsCollapseEl = document.getElementById('collapseOne');
+    if (characterDetailsCollapseEl) {
+        characterDetailsCollapse = new Collapse(characterDetailsCollapseEl, { toggle: false });
+    }
+    const shotFramingCollapseEl = document.getElementById('collapseThree');
+    if (shotFramingCollapseEl) {
+        shotFramingCollapse = new Collapse(shotFramingCollapseEl, { toggle: false });
+    }
+
+    // --- INITIALIZATION ---
+    const savedLang = localStorage.getItem('lang') || 'en';
+    languageSelector.value = savedLang;
+    setLanguage(savedLang);
+
+    languageSelector.addEventListener('change', (e) => {
+        setLanguage((e.target as HTMLSelectElement).value);
+    });
+
+    mockupTypeModelRadio.addEventListener('change', updateControlsBasedOnMockupType);
+    mockupTypeGarmentRadio.addEventListener('change', updateControlsBasedOnMockupType);
+
+    logoUpload.addEventListener('change', (event) => {
+        const files = (event.target as HTMLInputElement).files;
+        if (files && files[0]) {
+            logoFile = files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                logoPreviewImg.src = e.target?.result as string;
+                logoPreviewContainer.classList.remove('d-none');
+            };
+            reader.readAsDataURL(logoFile);
+        }
+    });
+
+    removeLogoButton.addEventListener('click', () => {
+        logoFile = null;
+        logoUpload.value = ''; // Clear the file input
+        logoPreviewContainer.classList.add('d-none');
+        logoPreviewImg.src = '';
+    });
+
+    generateButton.addEventListener('click', () => {
+        finalPromptText.value = ''; // Clear previous prompt before generating a new one
+        generateFinalImages();
+    });
+
+    regenerateButton.addEventListener('click', generateFinalImages);
+
+    editPromptButton.addEventListener('click', () => {
+        finalPromptText.readOnly = false;
+        finalPromptText.focus();
+        regenerateButton.classList.remove('d-none');
+    });
+});

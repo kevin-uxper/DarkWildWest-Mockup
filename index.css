@@ -1,228 +1,175 @@
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  margin: 0;
-  padding: 2rem;
-  background-color: #1f1f23; /* Darker background */
-  color: #f0f0f0;
-  display: flex;
-  justify-content: center;
+  overflow-y: scroll;
 }
 
-main {
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+#controls.card {
+  background-color: #f9f9f9;
 }
 
-h1 {
-  text-align: center;
-  color: #e0e0e0;
-  font-weight: 500;
+.logo-preview-container {
+    position: relative;
+    display: inline-block;
+    margin-top: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 5px;
 }
 
-#controls {
-  background-color: #2a2a2e; /* Slightly lighter card background */
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #3a3a40;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+#logo-preview-img {
+    max-width: 100px;
+    max-height: 100px;
+    display: block;
 }
 
-#controls h3 {
-    margin-top: 1rem;
-    margin-bottom: 0;
-    border-bottom: 1px solid #4a4a50;
-    padding-bottom: 0.5rem;
-    font-weight: 500;
-    color: #e0e0e0;
+#remove-logo-button {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: white;
+    border-radius: 50%;
+    padding: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-#controls h3:first-of-type {
-    margin-top: 0;
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    margin-left: 5px;
+    color: #6c757d;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.tooltip-text {
+    visibility: hidden;
+    width: 220px;
+    background-color: #343a40;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -110px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-weight: normal;
+    font-size: 0.875rem;
 }
 
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #c0c0c0;
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
 }
 
-textarea, input, select {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #38383e;
-  border: 1px solid #4a4a50;
-  border-radius: 4px;
-  color: #f0f0f0;
-  font-size: 1rem;
-  box-sizing: border-box;
-}
-
-textarea:focus, input:focus, select:focus {
-  outline: none;
-  border-color: #8a8a90;
-  box-shadow: 0 0 0 2px #4a90e240;
-}
-
-input[type="file"] {
-  padding: 0.5rem;
-}
-
-input[type="file"]::file-selector-button {
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: none;
-  background-color: #4A90E2;
-  color: #fff;
-  cursor: pointer;
-  margin-right: 1rem;
-  transition: background-color 0.2s;
-}
-
-input[type="file"]::file-selector-button:hover {
-  background-color: #357ABD;
-}
-
-
-.control-row {
-  display: flex;
-  gap: 1rem;
-}
-
-.control-row > div {
-  flex: 1;
-}
-
-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
-  background-color: #4A90E2; /* A nice blue */
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  align-self: flex-end; /* Align to the right */
-}
-
-button:hover:not(:disabled) {
-  background-color: #357ABD;
-}
-
-button:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-#image-gallery {
+.gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1rem;
-  width: 100%;
+}
+
+.gallery .card {
+  transition: transform 0.2s ease-in-out;
+  overflow: hidden;
+}
+
+.gallery .card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .image-container {
-  position: relative;
-  border: 4px solid #3a3a40;
-  border-radius: 8px;
-  overflow: hidden; /* Ensures the button doesn't stick out */
-  background-color: #38383e; /* Placeholder color */
+    position: relative;
 }
 
-.image-container img {
+.download-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.zoom-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.image-container:hover .download-button,
+.image-container:hover .zoom-button {
+    opacity: 1;
+}
+
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  height: auto;
-  object-fit: cover;
-  display: block; /* Removes bottom space */
 }
 
-.image-container .download-button {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 6px 12px;
+#join-button {
+  background-color: #1877F2;
+  border-color: #1877F2;
+}
+
+#join-button:hover {
+  background-color: #166fe5;
+  border-color: #166fe5;
+}
+
+.footer {
+    border-top: 1px solid #dee2e6;
+    margin-top: 60px !important;
+}
+
+.accordion-button {
+  font-weight: bold;
+}
+
+.accordion-button:not(.collapsed),
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: var(--bs-accordion-border-color);
+}
+
+/* Color swatches for select options */
+#garment-color-select option {
+  padding: 8px;
   border-radius: 4px;
-  text-decoration: none;
-  font-size: 0.9rem;
+  margin: 2px 0;
   font-weight: 500;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
+  border: 1px solid transparent;
+}
+#garment-color-select option:hover {
+    border-color: #0d6efd;
 }
 
-.image-container:hover .download-button {
-  opacity: 1;
+#garment-color-select option[value="Black"] { background-color: #000000; color: white; }
+#garment-color-select option[value="White"] { background-color: #FFFFFF; color: black; }
+#garment-color-select option[value="Bay"] { background-color: #5f7a8c; color: white; }
+#garment-color-select option[value="Blossom"] { background-color: #f7cac9; color: black; }
+#garment-color-select option[value="Chambray"] { background-color: #a7c5d8; color: black; }
+#garment-color-select option[value="Denim"] { background-color: #3b5998; color: white; }
+#garment-color-select option[value="Graphite"] { background-color: #464646; color: white; }
+#garment-color-select option[value="Grey"] { background-color: #808080; color: white; }
+#garment-color-select option[value="Ivory"] { background-color: #fffff0; color: black; }
+#garment-color-select option[value="Khaki"] { background-color: #c3b091; color: black; }
+
+
+/* Modal styling */
+#image-modal .modal-content {
+    background-color: transparent;
+    border: none;
 }
-
-
-#image-gallery p {
-    color: #ff6b6b; /* Red for errors */
-    grid-column: 1 / -1; /* Span all columns */
-    text-align: center;
-    background-color: #2a2a2e;
-    padding: 1rem;
-    border-radius: 8px;
+#image-modal .modal-header {
+    border-bottom: none;
 }
-
-.hidden {
-  display: none !important;
-}
-
-#loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    gap: 1rem;
-    text-align: center;
-    width: 100%;
-}
-
-.spinner {
-    border: 4px solid #f3f3f330;
-    border-top: 4px solid #4A90E2;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@media (max-width: 600px) {
-  body {
-    padding: 1rem;
-  }
-  .control-row {
-    flex-direction: column;
-  }
-  button {
-    align-self: stretch;
-  }
+#image-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%); /* Make close button white */
 }

@@ -1,165 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imagen API Demo</title>
-    <link rel="stylesheet" href="index.css">
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/genai": "https://esm.sh/@google/genai@1.0.0"
-        }
-      }
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Mockup Generator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="index.css" />
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.19.0",
+    "bootstrap": "https://aistudiocdn.com/bootstrap@^5.3.8"
+  }
+}
+</script>
 </head>
-<body>
-    <main>
-        <h1>Model Mockup Generator for DarkWildWest</h1>
-        <div id="controls" role="form" aria-labelledby="form-title">
-            <h2 id="form-title" class="sr-only">Image Generation for DarkWildWest</h2>
-            
-            <label for="prompt-input">Additional Prompt Details</label>
-            <textarea id="prompt-input" rows="2" aria-label="Additional image generation details" placeholder="e.g., western style, urban setting, dramatic lighting"></textarea>
 
-            <label for="negative-prompt-input">Negative Prompt (optional)</label>
-            <textarea id="negative-prompt-input" rows="2" aria-label="Optional negative prompt to exclude elements"></textarea>
+<body class="d-flex flex-column min-vh-100">
+  <header class="py-3 border-bottom">
+    <div class="container d-flex justify-content-between align-items-center">
+      <div class="logo">
+         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 3L9 2H15L19 3L21 8L18 9V21H6V9L3 8L5 3Z" stroke="#343a40" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M13.5 12.5L12 11L10.5 12.5L12 14L13.5 12.5Z" fill="#0d6efd" stroke="#0d6efd" stroke-width="0.5"/>
+        </svg>
+      </div>
+      <div class="d-flex align-items-center">
+         <a href="https://www.facebook.com/groups/2659839271033888" target="_blank"
+              class="btn text-white me-3" id="join-button">
+              <i class="bi bi-facebook"></i>
+              <span data-translate-key="joinButton">Join the discussion group</span>
+              <i class="bi bi-box-arrow-up-right ms-2"></i>
+            </a>
+        <div class="language-selector-container">
+          <select class="form-select form-select-sm" id="language-selector"
+            data-translate-aria-label-key="languageAriaLabel">
+            <option value="en">English</option>
+            <option value="vi">Tiếng Việt</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
 
-            <h3>Character Details</h3>
-            <div class="control-row">
-                 <div>
-                    <label for="gender-select">Gender</label>
-                    <select id="gender-select" aria-label="Gender preference">
-                        <option value="any" selected>Any</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="tattoos-select">Tattoos</label>
-                    <select id="tattoos-select" aria-label="Tattoo preference">
-                        <option value="any" selected>Any</option>
-                        <option value="yes">With Tattoos</option>
-                        <option value="no">No Tattoos</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="glasses-select">Glasses</label>
-                    <select id="glasses-select" aria-label="Glasses preference">
-                        <option value="any" selected>Any</option>
-                        <option value="yes">With Glasses</option>
-                        <option value="no">No Glasses</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="hat-select">Cowboy Hat</label>
-                    <select id="hat-select" aria-label="Cowboy hat preference">
-                        <option value="any" selected>Any</option>
-                        <option value="yes">With Cowboy Hat</option>
-                        <option value="no">No Cowboy Hat</option>
-                    </select>
-                </div>
+  <main class="container my-4 flex-grow-1">
+    <div class="row g-4">
+      <!-- Controls Column -->
+      <div class="col-lg-4">
+        <div class="card" id="controls">
+          <div class="card-body">
+            <h1 class="h4 mb-2" data-translate-key="title">AI Mockup Generator</h1>
+            <p class="subtitle text-muted mb-4" data-translate-key="subtitle">
+              Create free Mockups online for t-shirts, hoodies, stickers etc.
+            </p>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold" data-translate-key="mockupTypeTitle">Mockup Type</label>
+              <div class="btn-group w-100" role="group" aria-label="Mockup type">
+                <input type="radio" class="btn-check" name="mockup-type" id="mockup-type-model" autocomplete="off" checked>
+                <label class="btn btn-outline-primary" for="mockup-type-model" data-translate-key="mockupTypeWithModel">With Model</label>
+                <input type="radio" class="btn-check" name="mockup-type" id="mockup-type-garment" autocomplete="off">
+                <label class="btn btn-outline-primary" for="mockup-type-garment" data-translate-key="mockupTypeGarmentOnly">Garment Only</label>
+              </div>
             </div>
 
-            <h3>Garment Details</h3>
-             <div class="control-row">
-                <div>
-                    <label for="garment-type-select">Garment Type</label>
-                    <select id="garment-type-select" aria-label="Garment type">
-                        <option value="T-Shirt" selected>T-Shirt</option>
-                        <option value="Hoodie">Hoodie</option>
-                    </select>
+            <div class="accordion" id="controlsAccordion">
+              <!-- Character Details -->
+              <div class="accordion-item" id="character-details-accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"
+                    data-translate-key="characterDetailsTitle" id="character-details-button">
+                    Character Details
+                  </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#controlsAccordion">
+                  <div class="accordion-body">
+                    <div class="mb-3">
+                      <label for="gender-select" class="form-label" data-translate-key="genderLabel">Gender</label>
+                      <select class="form-select" id="gender-select">
+                        <option value="woman" data-translate-key="genderFemale">Female</option>
+                        <option value="man" data-translate-key="genderMale">Male</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label for="ethnicity-select" class="form-label"
+                        data-translate-key="ethnicityLabel">Ethnicity</label>
+                      <select class="form-select" id="ethnicity-select">
+                        <option value="any" data-translate-key="ethnicityAny">Any</option>
+                        <option value="caucasian" data-translate-key="ethnicityCaucasian">Caucasian</option>
+                        <option value="asian" data-translate-key="ethnicityAsian">Asian</option>
+                        <option value="african-american" data-translate-key="ethnicityAfricanAmerican">African
+                          American</option>
+                        <option value="hispanic" data-translate-key="ethnicityHispanic">Hispanic</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label for="hat-select" class="form-label" data-translate-key="hatLabel">Hat</label>
+                      <select class="form-select" id="hat-select">
+                        <option value="any" data-translate-key="hatAny">Any</option>
+                        <option value="no hat" data-translate-key="hatNone">No hat</option>
+                        <option value="cowboy hat" data-translate-key="hatCowboy">Cowboy hat</option>
+                        <option value="beanie" data-translate-key="hatBeanie">Beanie</option>
+                        <option value="baseball cap" data-translate-key="hatBaseballCap">Baseball cap</option>
+                      </select>
+                    </div>
+                     <div class="mb-3">
+                      <label for="glasses-select" class="form-label" data-translate-key="glassesLabel">Glasses</label>
+                      <select class="form-select" id="glasses-select">
+                        <option value="no glasses" data-translate-key="glassesNone">No glasses</option>
+                        <option value="clear glasses" data-translate-key="glassesClear">Clear glasses</option>
+                        <option value="sunglasses" data-translate-key="glassesSun">Sunglasses</option>
+                        <option value="colored glasses" data-translate-key="glassesColored">Colored glasses</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                 <div>
-                    <label for="garment-style-select">Garment Style</label>
-                    <select id="garment-style-select" aria-label="Garment style">
-                        <option>Comfort Colors 1717</option>
-                        <option>Bella+Canvas 3001</option>
-                        <option>Gildan 5000</option>
-                    </select>
+              </div>
+              <!-- Garment Details -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo"
+                    data-translate-key="garmentDetailsTitle">
+                    Garment Details
+                  </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#controlsAccordion">
+                  <div class="accordion-body">
+                    <div class="mb-3">
+                      <label for="garment-style-select" class="form-label"
+                        data-translate-key="garmentStyleLabel">Garment Style</label>
+                      <select class="form-select" id="garment-style-select">
+                        <option value="t-shirt">T-shirt</option>
+                        <option value="hoodie">Hoodie</option>
+                        <option value="sweatshirt">Sweatshirt</option>
+                        <option value="tank top">Tank Top</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label for="garment-color-select" class="form-label"
+                        data-translate-key="garmentColorLabel">Garment Color</label>
+                      <select class="form-select" id="garment-color-select">
+                         <option value="Black" data-color="#000000" data-translate-key="colorBlack">Black</option>
+                         <option value="White" data-color="#FFFFFF" data-translate-key="colorWhite">White</option>
+                         <option value="Bay" data-color="#5f7a8c" data-translate-key="colorBay">Bay</option>
+                         <option value="Blossom" data-color="#f7cac9" data-translate-key="colorBlossom">Blossom</option>
+                         <option value="Chambray" data-color="#a7c5d8" data-translate-key="colorChambray">Chambray</option>
+                         <option value="Denim" data-color="#3b5998" data-translate-key="colorDenim">Denim</option>
+                         <option value="Graphite" data-color="#464646" data-translate-key="colorGraphite">Graphite</option>
+                         <option value="Grey" data-color="#808080" data-translate-key="colorGrey">Grey</option>
+                         <option value="Ivory" data-color="#fffff0" data-translate-key="colorIvory">Ivory</option>
+                         <option value="Khaki" data-color="#c3b091" data-translate-key="colorKhaki">Khaki</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="garment-brand-select" class="form-label"
+                          data-translate-key="garmentBrandLabel">Garment Brand</label>
+                        <select class="form-select" id="garment-brand-select">
+                          <option value="any" data-translate-key="brandAny">Any</option>
+                          <option value="Bella+Canvas 3001">Bella+Canvas 3001</option>
+                          <option value="Gildan 5000">Gildan 5000</option>
+                          <option value="Next Level 3600">Next Level 3600</option>
+                          <option value="Comfort Colors 1717">Comfort Colors 1717</option>
+                        </select>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                    <label for="logo-input">Logo Upload (optional)</label>
-                    <input type="file" id="logo-input" accept="image/png, image/jpeg, image/webp">
+              </div>
+               <!-- Upload Artwork -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseArtwork" aria-expanded="false" aria-controls="collapseArtwork"
+                     data-translate-key="artworkDetailsTitle">
+                    Upload Artwork
+                  </button>
+                </h2>
+                <div id="collapseArtwork" class="accordion-collapse collapse" data-bs-parent="#controlsAccordion">
+                  <div class="accordion-body">
+                    <div class="mb-3">
+                      <label for="logo-upload" class="form-label">
+                        <span data-translate-key="logoLabel">Upload artwork</span>
+                        <span class="tooltip-container">
+                          <i class="bi bi-question-circle-fill"></i>
+                          <span class="tooltip-text" data-translate-key="artworkTooltip">The design will be mocked up onto the model's shirt in the generated photo.</span>
+                        </span>
+                      </label>
+                      <input class="form-control" type="file" id="logo-upload" accept="image/png, image/jpeg, image/webp">
+                    </div>
+                    <div class="logo-preview-container d-none" id="logo-preview-container">
+                        <img src="" alt="Logo Preview" id="logo-preview-img">
+                        <button type="button" class="btn-close" aria-label="Close" id="remove-logo-button"></button>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <!-- Shot & Framing -->
+              <div class="accordion-item" id="shot-framing-accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree"
+                     data-translate-key="shotFramingTitle" id="shot-framing-button">
+                    Shot & Framing
+                  </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#controlsAccordion">
+                  <div class="accordion-body">
+                     <div class="mb-3">
+                        <label for="shot-type-select" class="form-label" data-translate-key="shotTypeLabel">Shot Type</label>
+                        <select class="form-select" id="shot-type-select">
+                          <option value="full body" data-translate-key="shotTypeFullBody">Full Body</option>
+                          <option value="upper body" data-translate-key="shotTypeUpperBody">Upper Body</option>
+                          <option value="medium shot" data-translate-key="shotTypeMedium">Medium Shot (waist up)</option>
+                          <option value="cowboy shot" data-translate-key="shotTypeCowboy">Cowboy Shot (mid-thigh up)</option>
+                          <option value="close-up" data-translate-key="shotTypeCloseUp">Close-up</option>
+                          <option value="dutch angle" data-translate-key="shotTypeDutch">Dutch Angle</option>
+                          <option value="low angle shot" data-translate-key="shotTypeLow">Low Angle</option>
+                          <option value="high angle shot" data-translate-key="shotTypeHigh">High Angle</option>
+                        </select>
+                     </div>
+                     <div class="mb-3">
+                        <label for="pose-select" class="form-label" data-translate-key="poseLabel">Pose</label>
+                        <select class="form-select" id="pose-select">
+                          <option value="any" data-translate-key="poseAny">Any</option>
+                          <option value="standing straight, looking forward" data-translate-key="poseStandingStraight">Standing straight, looking forward</option>
+                          <option value="standing sideways" data-translate-key="poseStandingSideways">Standing sideways</option>
+                          <option value="walking towards camera" data-translate-key="poseWalking">Walking towards camera</option>
+                          <option value="leaning against a wall" data-translate-key="poseLeaning">Leaning against a wall</option>
+                          <option value="sitting on a stool" data-translate-key="poseSitting">Sitting on a stool</option>
+                          <option value="hands in pockets" data-translate-key="poseHandsPockets">Hands in pockets</option>
+                          <option value="arms crossed" data-translate-key="poseArmsCrossed">Arms crossed</option>
+                        </select>
+                      </div>
+                  </div>
+                </div>
+              </div>
+               <!-- Background -->
+               <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseBackground" aria-expanded="false" aria-controls="collapseBackground"
+                     data-translate-key="backgroundTitle">
+                    Background
+                  </button>
+                </h2>
+                <div id="collapseBackground" class="accordion-collapse collapse" data-bs-parent="#controlsAccordion">
+                  <div class="accordion-body">
+                    <label for="background-prompt-input" class="form-label" data-translate-key="backgroundLabel">Describe the background</label>
+                    <textarea class="form-control" id="background-prompt-input" rows="3" data-translate-placeholder-key="backgroundPlaceholder"></textarea>
+                  </div>
+                </div>
+              </div>
+              <!-- Image Settings -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour"
+                     data-translate-key="imageSettingsTitle">
+                    Image Settings
+                  </button>
+                </h2>
+                <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#controlsAccordion">
+                  <div class="accordion-body">
+                    <div class="mb-3">
+                       <label for="aspect-ratio-select" class="form-label" data-translate-key="aspectRatioLabel">Aspect Ratio</label>
+                        <select class="form-select" id="aspect-ratio-select">
+                          <option value="1:1" data-translate-key="aspectRatioSquare">Square (1:1) - approx. 1536x1536px</option>
+                          <option value="3:4" data-translate-key="aspectRatioPortrait">Portrait (3:4) - approx. 1152x1536px</option>
+                          <option value="4:3" data-translate-key="aspectRatioLandscape">Landscape (4:3) - approx. 1536x1152px</option>
+                          <option value="16:9" data-translate-key="aspectRatioWidescreen">Widescreen (16:9)</option>
+                          <option value="9:16" data-translate-key="aspectRatioPortraitWide">Portrait Wide (9:16)</option>
+                        </select>
+                    </div>
+                     <div class="mb-3">
+                        <label for="num-images-input" class="form-label" data-translate-key="numImagesLabel">Number of images (1-4)</label>
+                        <input type="number" class="form-control" id="num-images-input" value="1" min="1" max="4">
+                      </div>
+                      <div class="mb-3">
+                        <label for="negative-prompt-input" class="form-label">
+                           <span data-translate-key="negativePromptLabel">Negative Prompt</span>
+                           <span class="tooltip-container">
+                             <i class="bi bi-question-circle-fill"></i>
+                             <span class="tooltip-text" data-translate-key="negativePromptTooltip">Describe what you DON'T want to see in the image.</span>
+                           </span>
+                        </label>
+                        <input type="text" class="form-control" id="negative-prompt-input" value="cartoon, anime, ugly, deformed">
+                      </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Policy -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive"
+                     data-translate-key="policyTitle">
+                    Policy
+                  </button>
+                </h2>
+                <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#controlsAccordion">
+                  <div class="accordion-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="policy-checkbox" checked>
+                        <label class="form-check-label" for="policy-checkbox">
+                           <span data-translate-key="personPolicyLabel">Person Generation Policy</span>
+                           <span class="tooltip-container">
+                               <i class="bi bi-question-circle-fill"></i>
+                               <span class="tooltip-text" data-translate-key="personPolicyTooltip">I will not attempt to generate imagery of a real person, including myself.</span>
+                           </span>
+                        </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <h3>Shot & Angle</h3>
-            <div class="control-row">
-                <div>
-                    <label for="shot-type-select">Shot Type</label>
-                    <select id="shot-type-select" aria-label="Shot type">
-                        <option value="any" selected>Any</option>
-                        <option value="close-up">Close-up</option>
-                        <option value="full-body">Full Body Shot</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="face-visibility-select">Face Visibility</label>
-                    <select id="face-visibility-select" aria-label="Face visibility">
-                        <option value="any" selected>Any</option>
-                        <option value="visible">Face Visible</option>
-                        <option value="hidden">Face Not Visible</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="angle-select">Shooting Angle</label>
-                    <select id="angle-select" aria-label="Shooting angle">
-                        <option value="any" selected>Any</option>
-                        <option value="front">From the Front</option>
-                        <option value="back">From the Back</option>
-                    </select>
-                </div>
-            </div>
-
-            <h3>Scene & Image Settings</h3>
-            <div class="control-row">
-                <div>
-                    <label for="background-select">Background</label>
-                    <select id="background-select" aria-label="Background setting">
-                        <option value="prompt" selected>As per prompt</option>
-                        <option value="horse stable">Horse Stable</option>
-                        <option value="old warehouse">Old Warehouse</option>
-                        <option value="wooden wall">Wooden Wall</option>
-                        <option value="field">Field</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="aspect-ratio-select">Aspect Ratio</label>
-                    <select id="aspect-ratio-select" aria-label="Image aspect ratio">
-                        <option value="1:1" selected>Square (1:1)</option>
-                        <option value="16:9">Landscape (16:9)</option>
-                        <option value="9:16">Portrait (9:16)</option>
-                        <option value="4:3">Standard (4:3)</option>
-                        <option value="3:4">Tall (3:4)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="control-row">
-                <div>
-                    <label for="image-count-input">Number of images (1-4)</label>
-                    <input type="number" id="image-count-input" min="1" max="4" value="3" aria-label="Number of images to generate">
-                </div>
-                <div>
-                    <label for="person-generation-select">Person generation policy</label>
-                    <select id="person-generation-select" aria-label="Person generation policy">
-                        <option value="ALLOW_ADULT" selected>Allow Adults</option>
-                        <option value="ALLOW_ALL">Allow All</option>
-                        <option value="ALLOW_CHILD">Allow Children</option>
-                        <option value="DENY_ALL">Deny All</option>
-                    </select>
-                </div>
-            </div>
-
-            <button id="generate-button">Generate Images</button>
+            <button class="btn btn-primary w-100 mt-4" id="generate-button">
+              <span data-translate-key="generateButton">Generate Images</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Results Column -->
+      <div class="col-lg-8">
+        <div class="final-prompt-container mb-3 d-none" id="final-prompt-container">
+          <label for="final-prompt-text" class="form-label fw-bold">
+            <span data-translate-key="finalPromptLabel">Final Prompt Sent to AI</span>
+            <button class="btn btn-sm btn-outline-secondary ms-2" id="edit-prompt-button"><i class="bi bi-pencil"></i></button>
+          </label>
+          <textarea class="form-control" id="final-prompt-text" rows="4" readonly></textarea>
+           <button class="btn btn-primary mt-2 d-none" id="regenerate-button">
+              <span data-translate-key="generateButton">Generate</span>
+           </button>
         </div>
 
-        <div id="loading" class="hidden" aria-live="polite">
-            <div class="spinner"></div>
-            <p id="loading-message">Generating images, this may take a moment...</p>
+        <div class="gallery mt-4" id="gallery">
+          <div class="loading-indicator d-none" id="loading-indicator">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2" data-translate-key="loadingMessage">Generating images, please wait...</p>
+          </div>
         </div>
-        <div id="image-gallery" aria-live="polite"></div>
-    </main>
-    <script type="module" src="index.tsx"></script>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer mt-auto py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-translate-key="footerText">Copyright 2025 by CreatorStack</span>
+    </div>
+  </footer>
+
+  <!-- Image Modal -->
+  <div class="modal fade" id="image-modal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img src="" class="img-fluid" id="modal-image" alt="Enlarged image">
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  
+  <script type="module" src="index.tsx"></script>
 </body>
+
 </html>
